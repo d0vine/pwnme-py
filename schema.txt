@@ -1,0 +1,2 @@
+CREATE TABLE users (id int primary key, username varchar(64) not null, password varchar(64) not null, role varchar(16) not null);
+CREATE TABLE articles (id int primary key, name varchar(64) not null, content text not null, author int, foreign key (author) references users(id));
