@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>PwnMe / {{ article.name }}</title>
+    </head>
+    <body>
+        <form action="/articles/{{ article.id }}/edit" method="post">
+            <input type="text" value="{{ article.name }}" name="name"/><br/>
+            <textarea name="content">{{ article.content }}</textarea>
+            <br/>
+            <button type="submit">Update</button>
+        </form>
+    </body>
+</html>
