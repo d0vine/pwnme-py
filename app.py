@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+from binascii import hexlify
+from binascii import unhexlify
+from hashlib import md5
+import pickle
+
 from flask import Flask
 from flask import g
 from flask import redirect
@@ -62,20 +67,49 @@ def edit_article(article_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # check login status
-        return redirect('/articles')
+        post_data = request.form
+        username = post_data.get('username')
+        password = post_data.get('password')
+
+        if username and password:
+            cur = get_db().cursor()
+            m = md5()
+            m.update(password.encode('utf8'))
+            posted_pass_hash = m.hexdigest()
+
+            user = User(*cur.execute('select * from users where username=\'{}\''.format(username)).fetchone())
+            print(user)
+
+            if posted_pass_hash == user.password:
+                # set cookie
+                print('LUL')
+                resp = redirect('/articles')
+                response = app.make_response(resp)
+                response.set_cookie('auth', hexlify(pickle.dumps(user)))
+                return resp
+        else:
+            redirect('/login')
     else:
         return render_template('login.html')
 
 
 @app.route('/users')
 def user_list():
+    auth = request.cookies.get('auth')
     # TODO: check role
     # 401 if not admin
     # 403 if not logged in
-    cur = get_db().cursor()
-    users = cur.execute('select * from users').fetchall()
-    return render_template('users.html', users=[User(*user) for user in users])
+
+    if not auth:
+        return redirect('/articles', 403)
+    else:
+        user = pickle.loads(unhexlify(auth))
+        if user.role == 'admin':
+            cur = get_db().cursor()
+            users = cur.execute('select * from users').fetchall()
+            return render_template('users.html', users=[User(*user) for user in users])
+        else:
+            return redirect('/articles', 401)
 
 
 if __name__ == '__main__':
