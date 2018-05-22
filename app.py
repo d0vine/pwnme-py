@@ -12,7 +12,7 @@ from flask import request
 from db_wrapper import get_db
 from collections import namedtuple
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 Article = namedtuple('Article', ['id', 'name', 'content', 'author'])
 User = namedtuple('User', ['id', 'username', 'password', 'role'])
@@ -27,29 +27,41 @@ def close_connection(exception):
 
 @app.route('/')
 def index():
-    return render_template('main.html')
+    auth = request.cookies.get('auth')
+    user = pickle.loads(unhexlify(auth)) if auth else None
+    return render_template('main.html', user=user)
 
 
 @app.route('/articles')
 def article_list():
+    auth = request.cookies.get('auth')
+    user = pickle.loads(unhexlify(auth)) if auth else None
     cur = get_db().cursor()
     articles = cur.execute('select * from articles').fetchall()
-    return render_template('articles.html', articles=[Article(*art) for art in articles])
+    return render_template('articles.html', articles=[Article(*art) for art in articles], user=user)
 
 
 @app.route('/articles/<article_id>')
 def single_article(article_id):
+    auth = request.cookies.get('auth')
+    user = pickle.loads(unhexlify(auth)) if auth else None
     cur = get_db().cursor()
     article = cur.execute('select * from articles where id={}'.format(article_id)).fetchone()
-    return render_template('single_article.html', article=Article(*article))
+    return render_template('single_article.html', article=Article(*article), user=user)
 
 
 @app.route('/articles/<article_id>/edit', methods=['GET', 'POST'])
 def edit_article(article_id):
     cur = get_db().cursor()
     if request.method == 'GET':
+        auth = request.cookies.get('auth')
+        user = None
+        if auth:
+            user = pickle.loads(unhexlify(auth))
+        else:
+            return redirect('/articles/{}'.format(article_id))
         article = cur.execute('select * from articles where id={}'.format(article_id)).fetchone()
-        return render_template('edit_article.html', article=Article(*article))
+        return render_template('edit_article.html', article=Article(*article), user=user)
     else:
         data = request.form
         update_string = ", ".join(
@@ -78,11 +90,8 @@ def login():
             posted_pass_hash = m.hexdigest()
 
             user = User(*cur.execute('select * from users where username=\'{}\''.format(username)).fetchone())
-            print(user)
 
             if posted_pass_hash == user.password:
-                # set cookie
-                print('LUL')
                 resp = redirect('/articles')
                 response = app.make_response(resp)
                 response.set_cookie('auth', hexlify(pickle.dumps(user)))
@@ -91,6 +100,14 @@ def login():
             redirect('/login')
     else:
         return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    resp = redirect('/')
+    response = app.make_response(resp)
+    response.set_cookie('auth', '', expires=0)
+    return resp
 
 
 @app.route('/users')
@@ -107,7 +124,7 @@ def user_list():
         if user.role == 'admin':
             cur = get_db().cursor()
             users = cur.execute('select * from users').fetchall()
-            return render_template('users.html', users=[User(*user) for user in users])
+            return render_template('users.html', users=[User(*user) for user in users], user=user)
         else:
             return redirect('/articles', 401)
 

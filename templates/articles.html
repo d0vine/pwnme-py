@@ -1,16 +1,88 @@
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <title>Article list</title>
-    </head>
-    <body>
-        <h1>Article list</h1>
-        <p>
-            <ul>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/static/favicon.ico">
+
+    <title>PwnMe!</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/starter-template.css" rel="stylesheet">
+    <link href="/static/pygments-css/colorful.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="#">PwnMe!</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/articles">Articles <span class="sr-only">(current)</span></a>
+          </li>
+        {% if user and user.role == 'admin' %}
+          <li class="nav-item">
+            <a class="nav-link" href="/users">Users</a>
+          </li>
+        {% endif %}
+        {% if user %}
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="/login">Login</a>
+            </li>
+        {% endif %}
+        </ul>
+      </div>
+    </nav>
+
+    <!--
+    <form action="http://localhost:8000/process" method="POST" enctype="multipart/form-data">
+            <input type="file" name="replacement" id="replacement"/><br/>
+            <input type="file" name="image" id="image"/><br/>
+            <input type="submit" id="submit" value="Napieprzaj"/>
+        </form>
+    -->
+
+    <main role="main" class="container">
+      <div class="jumbotron">
+          <h2>Article list</h2>
+          <p>
+              <table class="table">
+                <thead>
+                <tr><th>id</th><th>Link</th><th>Article name</th></tr>
+                </thead>
+                <tbody>
                 {% for article in articles %}
-                <li><a href="/articles/{{ article.id }}">{{ article.name }}</a></li>
+                <tr><td>{{ article.id }}</td><td><a href="/articles/{{ article.id }}" style="text-decoration: underline; color: black">Read me!</a></td><td>{{ article.name }}</td></tr>
                 {% endfor %}
-            </ul>
-        </p>
-    </body>
+                </tbody>
+            </table>
+          </p>
+      </div>
+
+    </main><!-- /.container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="/static/assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="/static/assets/js/vendor/popper.min.js"></script>
+    <script src="/static/dist/js/bootstrap.min.js"></script>
+  </body>
 </html>
